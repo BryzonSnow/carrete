@@ -1,0 +1,27 @@
+# Env
+.env
+.env.local
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+npm-debug.log*
+
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+.venv/
+
+# IDE
+.idea/
+.vscode/
