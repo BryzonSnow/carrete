@@ -65,16 +65,16 @@ def test_carrete_flow(client):
     added = client.post(
         f"/api/events/{slug}/items",
         headers=headers,
-        json={"name": "Pan amasado", "unit": "casero"},
+        json={"name": "2 botellas de agua"},
     )
-    assert added.status_code == 200
-    extras = [i for i in added.json()["items"] if i["name"] == "Pan amasado"]
+    assert added.status_code == 200, added.text
+    extras = [i for i in added.json()["items"] if i["name"] == "2 botellas de agua"]
     assert extras and extras[0]["is_open"] is True
     assert extras[0]["claims"][0]["guest_name"] == "Cami"
 
     removed = client.delete(f"/api/events/{slug}/items/{extras[0]['id']}", headers=headers)
     assert removed.status_code == 200
-    assert all(i["name"] != "Pan amasado" for i in removed.json()["items"])
+    assert all(i["name"] != "2 botellas de agua" for i in removed.json()["items"])
 
     paid = client.post(f"/api/events/{slug}/transfer", headers=headers, json={"marked": True})
     assert paid.status_code == 200

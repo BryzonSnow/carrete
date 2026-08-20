@@ -305,7 +305,7 @@ class Store:
             with conn.transaction():
                 self._claim(conn, item_id, guest_id, qty, allow_over)
 
-    def _claim(self, conn, item_id, guest_id, qty: int, _allow_over: bool) -> None:
+    def _claim(self, conn, item_id, guest_id, qty: int, allow_over: bool = False) -> None:
         item = conn.execute(
             "select event_id, required_qty, is_open from items where id = %s for update",
             (item_id,),

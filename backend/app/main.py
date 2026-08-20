@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from logging import getLogger
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, Query, Response
+from fastapi import Depends, FastAPI, Header, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -23,6 +24,7 @@ async def lifespan(_app: FastAPI):
     close()
 
 
+log = getLogger("carrete")
 cfg = settings()
 app = FastAPI(title="Carrete", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
@@ -47,6 +49,18 @@ async def app_error_handler(_request, exc: AppError):
 @app.exception_handler(RequestValidationError)
 async def validation_handler(_request, _exc: RequestValidationError):
     return JSONResponse(status_code=400, content={"error": "json inválido"})
+
+
+@app.exception_handler(Exception)
+async def unhandled_handler(request: Request, exc: Exception):
+    log.exception("unhandled error on %s %s", request.method, request.url.path)
+    origin = request.headers.get("origin", "")
+    resp = JSONResponse(status_code=500, content={"error": "algo salió mal"})
+    if origin:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Vary"] = "Origin"
+        resp.headers["Access-Control-Expose-Headers"] = "X-Guest-Token"
+    return resp
 
 
 def store() -> Store:
@@ -159,7 +173,6 @@ def add_item(
         return st.payload(event, guest, admin)
     if found is None:
         raise Unauthorized()
-    body.is_open = True
     st.add_item(event["id"], body, found[0].id)
     return st.payload(event, guest, admin)
 
