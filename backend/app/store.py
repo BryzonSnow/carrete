@@ -263,6 +263,27 @@ class Store:
                 ).fetchone()
                 self._claim(conn, row["id"], guest_id, qty, allow_over=True)
 
+    def add_needed_item(self, event_id, data: CreateItemInput) -> None:
+        name = data.name.strip()
+        if not name:
+            raise ValidationErr("el nombre del ítem es obligatorio")
+        category = data.category.strip() or "Lista"
+        unit = data.unit.strip() or "un"
+        qty = data.required_qty if data.required_qty >= 1 else 1
+        with self.pool.connection() as conn:
+            with conn.transaction():
+                sort_row = conn.execute(
+                    "select coalesce(max(sort_order), -1) + 1 as n from items where event_id = %s",
+                    (event_id,),
+                ).fetchone()
+                conn.execute(
+                    """
+                    insert into items (event_id, category, name, unit, required_qty, is_open, sort_order)
+                    values (%s,%s,%s,%s,%s,false,%s)
+                    """,
+                    (event_id, category, name, unit, qty, sort_row["n"]),
+                )
+
     def delete_item(self, item_id: str, guest_id: str | None, is_admin: bool) -> None:
         with self.pool.connection() as conn:
             with conn.transaction():

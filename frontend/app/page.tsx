@@ -36,8 +36,8 @@ export default function HomePage() {
           <li className="flex gap-3">
             <PixelIcon kind="bag" size={28} />
             <span>
-              <span className="block font-medium text-[var(--cream)]">Qué lleva cada uno</span>
-              Opcional. No es lista de compras: cada uno anota lo suyo.
+              <span className="block font-medium text-[var(--cream)]">Qué hay que llevar</span>
+              El anfitrión arma la lista. Cada uno elige y dice ok, yo voy con esto.
             </span>
           </li>
           <li className="flex gap-3">

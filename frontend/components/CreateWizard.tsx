@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEvent, joinEvent } from "@/lib/api";
-import { ACCOUNT_TYPES, BANKS } from "@/lib/defaults";
+import { ACCOUNT_TYPES, BANKS, SUGGESTED_ITEMS } from "@/lib/defaults";
 import { defaultStartsAt, parseLocalInput } from "@/lib/format";
 import { setAdminToken } from "@/lib/storage";
-import { PixelAvatar } from "@/components/PixelArt";
+import { ItemPixelIcon, PixelAvatar } from "@/components/PixelArt";
 
-const STEPS = ["El carrete", "Cuota", "Listo"];
+const STEPS = ["El carrete", "Qué llevar", "Cuota", "Listo"];
+
+type DraftItem = { name: string; category: string };
 
 export function CreateWizard() {
   const router = useRouter();
@@ -18,6 +20,9 @@ export function CreateWizard() {
   const [name, setName] = useState("");
   const [hostName, setHostName] = useState("");
   const [startsAt, setStartsAt] = useState(defaultStartsAt);
+  const [address, setAddress] = useState("");
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
+  const [customItem, setCustomItem] = useState("");
   const [useFee, setUseFee] = useState(false);
   const [fee, setFee] = useState("");
   const [bankHolder, setBankHolder] = useState("");
@@ -45,21 +50,26 @@ export function CreateWizard() {
         name,
         host_name: hostName,
         starts_at: parseLocalInput(startsAt).toISOString(),
-        address: "",
+        address,
         fee_amount: feeAmount,
         bank_holder: useFee ? bankHolder : "",
         bank_rut: useFee ? bankRut : "",
         bank_name: useFee ? bankName : "",
         bank_account_type: useFee ? accountType : "",
         bank_account_number: useFee ? accountNumber : "",
-        items: [],
+        items: draftItems.map((item) => ({
+          category: item.category,
+          name: item.name,
+          unit: "un",
+          required_qty: 1,
+        })),
       });
       setAdminToken(out.slug, out.admin_token);
       if (hostName.trim()) {
         await joinEvent(out.slug, hostName, "going");
       }
       setCreated(out);
-      setStep(2);
+      setStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear");
     } finally {
@@ -93,7 +103,7 @@ export function CreateWizard() {
           <div>
             <h2 className="font-display text-3xl">¿Qué vamos a armar?</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Lo demás (cuota, qué lleva cada uno) es opcional y se arma en el link.
+              Fecha, hora y lugar. La lista de qué llevar y la cuota van después.
             </p>
           </div>
           <Field label="Nombre del carrete">
@@ -147,6 +157,17 @@ export function CreateWizard() {
               />
             </Field>
           </div>
+          <Field label="Dónde">
+            <input
+              className="field"
+              placeholder="Casa de Nico, Manuel Montt 100…"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              autoCapitalize="sentences"
+              enterKeyHint="next"
+            />
+          </Field>
+          <p className="-mt-2 text-xs text-[var(--muted)]">Se muestra a quienes confirman que van.</p>
           <button
             type="button"
             className="btn-primary mt-1 min-h-12"
@@ -159,6 +180,34 @@ export function CreateWizard() {
       ) : null}
 
       {step === 1 ? (
+        <PackingStep
+          draftItems={draftItems}
+          customItem={customItem}
+          onCustomItem={setCustomItem}
+          onToggle={(item) => {
+            setDraftItems((prev) =>
+              prev.some((row) => row.name.toLowerCase() === item.name.toLowerCase())
+                ? prev.filter((row) => row.name.toLowerCase() !== item.name.toLowerCase())
+                : [...prev, item],
+            );
+          }}
+          onAddCustom={() => {
+            const name = customItem.trim();
+            if (name.length < 2) return;
+            setDraftItems((prev) =>
+              prev.some((row) => row.name.toLowerCase() === name.toLowerCase())
+                ? prev
+                : [...prev, { name, category: "Otros" }],
+            );
+            setCustomItem("");
+          }}
+          onRemove={(name) => setDraftItems((prev) => prev.filter((row) => row.name !== name))}
+          onBack={() => setStep(0)}
+          onNext={() => setStep(2)}
+        />
+      ) : null}
+
+      {step === 2 ? (
         <div className="grid gap-4">
           <div>
             <h2 className="font-display text-3xl">¿Hay cuota?</h2>
@@ -221,7 +270,7 @@ export function CreateWizard() {
           ) : null}
           {error ? <p className="text-sm text-red-400">{error}</p> : null}
           <div className="flex gap-2">
-            <button type="button" className="btn-ghost flex-1" onClick={() => setStep(0)}>
+            <button type="button" className="btn-ghost flex-1" onClick={() => setStep(1)}>
               Atrás
             </button>
             <button type="button" className="btn-primary flex-1" disabled={busy} onClick={() => void finish()}>
@@ -231,7 +280,7 @@ export function CreateWizard() {
         </div>
       ) : null}
 
-      {step === 2 && created ? (
+      {step === 3 && created ? (
         <div className="grid gap-4">
           <div>
             <h2 className="font-display text-3xl">Listo. Mándales el link.</h2>
@@ -281,6 +330,104 @@ function LinkRow({ label, value }: { label: string; value: string }) {
           }}
         >
           {copied ? "Ok" : "Copiar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PackingStep({
+  draftItems,
+  customItem,
+  onCustomItem,
+  onToggle,
+  onAddCustom,
+  onRemove,
+  onBack,
+  onNext,
+}: {
+  draftItems: DraftItem[];
+  customItem: string;
+  onCustomItem: (value: string) => void;
+  onToggle: (item: DraftItem) => void;
+  onAddCustom: () => void;
+  onRemove: (name: string) => void;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="grid gap-4">
+      <div>
+        <h2 className="font-display text-3xl">¿Qué hay que llevar?</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Arma una lista. Cada invitado elige y dice “ok, yo voy con esto”. También pueden anotar algo extra en el
+          link.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {SUGGESTED_ITEMS.map((item) => {
+          const on = draftItems.some((row) => row.name === item.name);
+          return (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => onToggle(item)}
+              className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                on
+                  ? "border-transparent bg-[var(--ok)] text-[#06210f]"
+                  : "border-[var(--line)] bg-[var(--bg)]/40 hover:border-[var(--ember)]/50"
+              }`}
+            >
+              <ItemPixelIcon name={item.name} size={18} />
+              {item.name}
+            </button>
+          );
+        })}
+      </div>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onAddCustom();
+        }}
+      >
+        <input
+          className="field"
+          placeholder="Otra cosa: ensalada cesar, naipes…"
+          value={customItem}
+          onChange={(e) => onCustomItem(e.target.value)}
+          maxLength={40}
+        />
+        <button type="submit" className="btn-ghost shrink-0" disabled={customItem.trim().length < 2}>
+          Sumar
+        </button>
+      </form>
+      {draftItems.length > 0 ? (
+        <ul className="space-y-2">
+          {draftItems.map((item) => (
+            <li
+              key={item.name}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)]/50 px-3 py-2"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <ItemPixelIcon name={item.name} size={22} />
+                <span className="font-medium">{item.name}</span>
+              </span>
+              <button type="button" className="text-xs text-[var(--muted)] hover:text-[var(--cream)]" onClick={() => onRemove(item.name)}>
+                Quitar
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-[var(--muted)]">Sin lista también sirve: cada uno anota lo suyo después.</p>
+      )}
+      <div className="flex gap-2">
+        <button type="button" className="btn-ghost flex-1" onClick={onBack}>
+          Atrás
+        </button>
+        <button type="button" className="btn-primary flex-1" onClick={onNext}>
+          {draftItems.length > 0 ? "Siguiente" : "Saltar"}
         </button>
       </div>
     </div>

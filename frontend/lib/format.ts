@@ -68,6 +68,10 @@ export function transferText(bank: BankDetails, amount: number, glosa: string) {
   return lines.filter(Boolean).join("\n");
 }
 
+export function mapsUrl(address: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
 export function origin() {
   if (typeof window === "undefined") return "";
   return window.location.origin;

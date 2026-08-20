@@ -110,3 +110,67 @@ def test_host_joins_going(client):
     payload = joined.json()["payload"]
     assert payload["me"]["rsvp"] == "going"
     assert payload["stats"]["going"] == 1
+    assert payload["event"]["address_locked"] is False
+    assert payload["event"]["address"] is None
+
+
+def test_needed_items_claim(client):
+    starts = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=23, minute=0, second=0, microsecond=0)
+    created = client.post(
+        "/api/events",
+        json={
+            "name": "Asado",
+            "host_name": "Nico",
+            "starts_at": starts.isoformat(),
+            "address": "Manuel Montt 100",
+            "items": [
+                {"category": "Parrilla", "name": "Carbón", "unit": "un", "required_qty": 1},
+                {"category": "Bebidas", "name": "Hielo", "unit": "un", "required_qty": 2},
+            ],
+        },
+    )
+    assert created.status_code == 201, created.text
+    slug = created.json()["slug"]
+    admin = created.json()["admin_token"]
+
+    cami = client.post(f"/api/events/{slug}/join", json={"display_name": "Cami", "rsvp": "going"})
+    mati = client.post(f"/api/events/{slug}/join", json={"display_name": "Mati", "rsvp": "going"})
+    assert cami.status_code == 200
+    assert mati.status_code == 200
+    cami_h = {"X-Guest-Token": cami.json()["session_token"]}
+    mati_h = {"X-Guest-Token": mati.json()["session_token"]}
+
+    payload = cami.json()["payload"]
+    assert payload["event"]["address"] == "Manuel Montt 100"
+    carbon = next(i for i in payload["items"] if i["name"] == "Carbón")
+    hielo = next(i for i in payload["items"] if i["name"] == "Hielo")
+    assert carbon["is_open"] is False
+    assert hielo["required_qty"] == 2
+
+    claimed = client.put(f"/api/events/{slug}/items/{carbon['id']}/claim", headers=cami_h, json={"qty": 1})
+    assert claimed.status_code == 200
+    carbon = next(i for i in claimed.json()["items"] if i["name"] == "Carbón")
+    assert carbon["claims"][0]["guest_name"] == "Cami"
+
+    taken = client.put(f"/api/events/{slug}/items/{carbon['id']}/claim", headers=mati_h, json={"qty": 1})
+    assert taken.status_code == 409
+
+    first = client.put(f"/api/events/{slug}/items/{hielo['id']}/claim", headers=cami_h, json={"qty": 1})
+    second = client.put(f"/api/events/{slug}/items/{hielo['id']}/claim", headers=mati_h, json={"qty": 1})
+    assert first.status_code == 200
+    assert second.status_code == 200
+    hielo = next(i for i in second.json()["items"] if i["name"] == "Hielo")
+    assert hielo["committed_qty"] == 2
+
+    added = client.post(
+        f"/api/events/{slug}/items",
+        headers={"X-Admin-Token": admin},
+        json={"name": "Parlante", "is_open": False},
+    )
+    assert added.status_code == 200
+    assert any(i["name"] == "Parlante" and i["is_open"] is False and i["claims"] == [] for i in added.json()["items"])
+
+    dropped = client.put(f"/api/events/{slug}/items/{carbon['id']}/claim", headers=cami_h, json={"qty": 0})
+    assert dropped.status_code == 200
+    carbon = next(i for i in dropped.json()["items"] if i["name"] == "Carbón")
+    assert carbon["claims"] == []

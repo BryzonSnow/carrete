@@ -41,6 +41,7 @@ export function AdminPanel({
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--ember)]">Panel de control</p>
         <h1 className="font-display mt-1 text-4xl">{event.name}</h1>
         <p className="mt-1 text-[var(--muted)]">{formatWhen(event.starts_at)}</p>
+        {event.address ? <p className="mt-2 text-sm">{event.address}</p> : null}
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <CopyButton text={guestUrl} label="Copiar link de invitados" className="btn-primary" />
           {adminUrl ? (
@@ -116,24 +117,55 @@ export function AdminPanel({
 
       <section className="card overflow-hidden p-0">
         <div className="border-b border-[var(--line)] px-4 py-3">
-          <h2 className="font-display text-2xl">Qué llevan</h2>
+          <h2 className="font-display text-2xl">Qué hay que llevar</h2>
         </div>
         <ul>
-          {data.items.length === 0 ? (
-            <li className="px-4 py-6 text-sm text-[var(--muted)]">Nadie anotó aportes todavía. Es opcional.</li>
+          {data.items.filter((item) => !item.is_open).length === 0 ? (
+            <li className="px-4 py-6 text-sm text-[var(--muted)]">No armaste lista. Los invitados igual pueden anotar extras.</li>
           ) : (
-            data.items.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0">
-                <p className="flex min-w-0 items-center gap-3 font-medium">
-                  <ItemPixelIcon name={item.name} size={24} />
-                  <span>
-                    {item.name}
-                    {item.unit && item.unit !== "un" ? <span className="font-normal text-[var(--muted)]"> · {item.unit}</span> : null}
+            data.items
+              .filter((item) => !item.is_open)
+              .map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0">
+                  <p className="flex min-w-0 items-center gap-3 font-medium">
+                    <ItemPixelIcon name={item.name} size={24} />
+                    <span>{item.name}</span>
+                  </p>
+                  <span className="text-right text-sm text-[var(--muted)]">
+                    {item.claims.length === 0
+                      ? "Nadie aún"
+                      : item.claims.map((c) => c.guest_name).join(", ")}
                   </span>
-                </p>
-                <span className="text-sm text-[var(--muted)]">{item.claims[0]?.guest_name || "—"}</span>
-              </li>
-            ))
+                </li>
+              ))
+          )}
+        </ul>
+      </section>
+
+      <section className="card overflow-hidden p-0">
+        <div className="border-b border-[var(--line)] px-4 py-3">
+          <h2 className="font-display text-2xl">Extras</h2>
+        </div>
+        <ul>
+          {data.items.filter((item) => item.is_open).length === 0 ? (
+            <li className="px-4 py-6 text-sm text-[var(--muted)]">Nadie anotó algo extra todavía.</li>
+          ) : (
+            data.items
+              .filter((item) => item.is_open)
+              .map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0">
+                  <p className="flex min-w-0 items-center gap-3 font-medium">
+                    <ItemPixelIcon name={item.name} size={24} />
+                    <span>
+                      {item.name}
+                      {item.unit && item.unit !== "un" ? (
+                        <span className="font-normal text-[var(--muted)]"> · {item.unit}</span>
+                      ) : null}
+                    </span>
+                  </p>
+                  <span className="text-sm text-[var(--muted)]">{item.claims[0]?.guest_name || "—"}</span>
+                </li>
+              ))
           )}
         </ul>
       </section>

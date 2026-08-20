@@ -151,6 +151,12 @@ def add_item(
 ):
     event = st.event_by_slug(slug)
     found = st.guest_by_token(event["id"], guest)
+    is_admin = admin != "" and admin == event["admin_token"]
+    if found is None and not is_admin:
+        raise Unauthorized()
+    if is_admin and not body.is_open:
+        st.add_needed_item(event["id"], body)
+        return st.payload(event, guest, admin)
     if found is None:
         raise Unauthorized()
     body.is_open = True

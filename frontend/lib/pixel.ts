@@ -141,7 +141,17 @@ const FACES: string[][] = [
   ],
 ];
 
-export type ItemIconKind = "fire" | "ice" | "bottle" | "food" | "speaker" | "coin" | "bag" | "people";
+export type ItemIconKind =
+  | "fire"
+  | "ice"
+  | "bottle"
+  | "food"
+  | "speaker"
+  | "coin"
+  | "bag"
+  | "people"
+  | "clock"
+  | "pin";
 
 export const ICONS: Record<ItemIconKind, string[]> = {
   fire: [
@@ -242,6 +252,34 @@ export const ICONS: Record<ItemIconKind, string[]> = {
     "............",
     "............",
   ],
+  clock: [
+    "............",
+    "....DDDD....",
+    "...DWWWWD...",
+    "..DW.I.WD...",
+    "..DW.IIDD...",
+    "..DWW.WWD...",
+    "...DWWWWD...",
+    "....DDDD....",
+    "............",
+    "............",
+    "............",
+    "............",
+  ],
+  pin: [
+    "............",
+    "....TTTT....",
+    "...TWWWWT...",
+    "...TWIWWT...",
+    "...TWWWWT...",
+    "....TTTT....",
+    ".....TT.....",
+    ".....TT.....",
+    "......T.....",
+    "............",
+    "............",
+    "............",
+  ],
   people: [
     "............",
     "....HH.HH...",
@@ -334,6 +372,8 @@ export function iconColors(kind: ItemIconKind): Record<string, string> {
     N: "#160e0a",
     M: "#a85a4a",
   };
+  if (kind === "clock") return { ...base, D: "#c9b8a4", W: "#2a2420", I: "#ffba08" };
+  if (kind === "pin") return { ...base, T: "#e85d04", W: "#f4efe6", I: "#1a0c04" };
   if (kind === "ice") return { ...base, W: "#b8d4e8", I: "#7aa0c4" };
   if (kind === "bottle") return { ...base, T: "#52b788", W: "#d8f3dc", D: "#1b4332" };
   if (kind === "food") return { ...base, A: "#e85d04", T: "#f4efe6", S: "#52b788" };

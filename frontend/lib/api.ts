@@ -79,12 +79,19 @@ export async function addItem(
   return request<EventPayload>(`/api/events/${slug}/items`, slug, {
     method: "POST",
     body: JSON.stringify({
-      category: item.category || "Aportes",
+      category: item.category || (item.is_open === false ? "Lista" : "Aportes"),
       name: item.name,
       unit: item.unit || "",
       required_qty: item.required_qty ?? 1,
-      is_open: true,
+      is_open: item.is_open ?? true,
     }),
+  });
+}
+
+export async function claimItem(slug: string, itemId: string, qty: number) {
+  return request<EventPayload>(`/api/events/${slug}/items/${itemId}/claim`, slug, {
+    method: "PUT",
+    body: JSON.stringify({ qty }),
   });
 }
 

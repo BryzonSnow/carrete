@@ -4,8 +4,8 @@ import { NameGate } from "@/components/NameGate";
 import { QuotaCard } from "@/components/QuotaCard";
 import { RsvpCard } from "@/components/RsvpCard";
 import { SupplyBoard } from "@/components/SupplyBoard";
-import { PixelAvatar } from "@/components/PixelArt";
-import { formatWhenParts } from "@/lib/format";
+import { WhenWhereCard } from "@/components/WhenWhereCard";
+import { PixelAvatar, PixelIcon } from "@/components/PixelArt";
 import { useEvent } from "@/lib/useEvent";
 import Link from "next/link";
 import { useState } from "react";
@@ -30,7 +30,6 @@ export function EventView({ slug }: { slug: string }) {
 
   const { event, me, guests, items, stats, is_admin } = data;
   const going = guests.filter((g) => g.rsvp === "going" || g.rsvp === "late");
-  const when = formatWhenParts(event.starts_at);
 
   return (
     <>
@@ -41,11 +40,6 @@ export function EventView({ slug }: { slug: string }) {
           {event.host_name ? `Te invita ${event.host_name}` : "Carrete"}
         </p>
         <h1 className="font-display mt-2 text-4xl sm:text-5xl">{event.name}</h1>
-        <p className="mt-3 capitalize text-[var(--cream)]/85">
-          {when.date}
-          <span className="mx-2 text-[var(--muted)]">·</span>
-          <span className="normal-case">{when.time}</span>
-        </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-[var(--line)] px-3 py-1 text-sm text-[var(--muted)]">
             {stats.going + stats.late} van
@@ -60,11 +54,20 @@ export function EventView({ slug }: { slug: string }) {
         </div>
       </header>
 
-      {me ? <RsvpCard slug={slug} current={me.rsvp} onUpdate={setData} /> : null}
+      <WhenWhereCard startsAt={event.starts_at} address={event.address} addressLocked={event.address_locked} />
+
+      {me ? (
+        <div className="mt-4">
+          <RsvpCard slug={slug} current={me.rsvp} onUpdate={setData} />
+        </div>
+      ) : null}
 
       <div className="mt-4 space-y-4">
         <section className="card p-4 sm:p-5">
-          <h3 className="font-display text-xl">Quiénes van</h3>
+          <h3 className="font-display flex items-center gap-2 text-xl">
+            <PixelIcon kind="people" size={24} />
+            Quiénes van
+          </h3>
           <ul className="mt-3 flex flex-wrap gap-2">
             {going.length === 0 ? (
               <li className="text-sm text-[var(--muted)]">Todavía nadie confirma.</li>
@@ -85,7 +88,14 @@ export function EventView({ slug }: { slug: string }) {
             )}
           </ul>
         </section>
-        <SupplyBoard slug={slug} items={items} meId={me?.id} canAdd={Boolean(me)} onUpdate={setData} />
+        <SupplyBoard
+          slug={slug}
+          items={items}
+          meId={me?.id}
+          canAdd={Boolean(me)}
+          isAdmin={is_admin}
+          onUpdate={setData}
+        />
         <QuotaCard slug={slug} data={data} onUpdate={setData} />
       </div>
     </>
