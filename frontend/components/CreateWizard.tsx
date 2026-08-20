@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEvent, joinEvent } from "@/lib/api";
 import { ACCOUNT_TYPES, BANKS, SUGGESTED_ITEMS } from "@/lib/defaults";
-import { defaultStartsAt, parseLocalInput } from "@/lib/format";
+import { defaultStartsAt, formatRut, parseLocalInput } from "@/lib/format";
 import { setAdminToken } from "@/lib/storage";
 import { ItemPixelIcon, PixelAvatar } from "@/components/PixelArt";
 
@@ -236,7 +236,17 @@ export function CreateWizard() {
                 <input className="field" placeholder="Nombre del titular" value={bankHolder} onChange={(e) => setBankHolder(e.target.value)} />
               </Field>
               <Field label="RUT">
-                <input className="field" placeholder="12.345.678-9" value={bankRut} onChange={(e) => setBankRut(e.target.value)} />
+                <input
+                  className="field"
+                  placeholder="12.345.678-9"
+                  value={bankRut}
+                  onChange={(e) => setBankRut(formatRut(e.target.value))}
+                  inputMode="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  maxLength={12}
+                />
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Banco">

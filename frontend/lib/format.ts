@@ -8,6 +8,22 @@ export function clp(amount: number) {
   }).format(amount);
 }
 
+/** Formats a Chilean RUT as 12.345.678-9 while typing. */
+export function formatRut(value: string) {
+  let cleaned = value.replace(/[^0-9kK]/g, "").toUpperCase();
+  const kIndex = cleaned.indexOf("K");
+  if (kIndex !== -1) {
+    cleaned = `${cleaned.slice(0, kIndex).replaceAll("K", "")}K`;
+  }
+  cleaned = cleaned.slice(0, 9);
+  if (cleaned.length <= 1) return cleaned;
+
+  const body = cleaned.slice(0, -1);
+  const dv = cleaned.slice(-1);
+  const withDots = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${withDots}-${dv}`;
+}
+
 export function formatWhen(iso: string) {
   const { date, time } = formatWhenParts(iso);
   return `${date} · ${time}`;
