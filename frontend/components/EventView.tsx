@@ -13,7 +13,7 @@ import { useState } from "react";
 
 export function EventView({ slug }: { slug: string }) {
   const { data, error, loading, setData } = useEvent(slug);
-  const [goingOpen, setGoingOpen] = useState(true);
+  const [goingOpen, setGoingOpen] = useState(false);
 
   if (loading) {
     return <p className="pt-24 text-center text-[var(--muted)]">Cargando el carrete…</p>;

@@ -5,7 +5,7 @@ import type { EventPayload, RSVP } from "@/lib/types";
 
 const OPTIONS: { value: RSVP; label: string; hint: string }[] = [
   { value: "going", label: "Voy", hint: "Ahí nos vemos" },
-  { value: "late", label: "Llego más tarde", hint: "No me esperen pa'l brindis" },
+  { value: "late", label: "Más tarde", hint: "No me esperen" },
   { value: "not_going", label: "No voy", hint: "La próxima" },
 ];
 
@@ -32,7 +32,7 @@ export function RsvpCard({
       <p className="mt-1 text-sm text-[var(--muted)]">
         {current === "pending" ? "Elige una para que el resto sepa." : "Puedes cambiarla cuando quieras."}
       </p>
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
         {OPTIONS.map((opt) => {
           const active = current === opt.value;
           return (
@@ -40,7 +40,7 @@ export function RsvpCard({
               key={opt.value}
               type="button"
               onClick={() => void pick(opt.value)}
-              className={`cursor-pointer rounded-2xl border px-3 py-3 text-left transition ${
+              className={`min-h-16 cursor-pointer rounded-2xl border px-1.5 py-3 text-center transition sm:min-h-[4.5rem] sm:px-3 ${
                 active
                   ? opt.value === "going"
                     ? "border-transparent bg-[var(--ok)] text-[#06210f]"
@@ -50,8 +50,12 @@ export function RsvpCard({
                   : "border-[var(--line)] bg-[var(--bg)]/40 hover:border-[var(--ember)]/50"
               }`}
             >
-              <span className="block font-semibold">{opt.label}</span>
-              <span className={`text-xs ${active && opt.value !== "not_going" ? "opacity-70" : "text-[var(--muted)]"}`}>
+              <span className="block text-sm font-semibold sm:text-base">{opt.label}</span>
+              <span
+                className={`mt-0.5 block text-[10px] leading-tight sm:text-xs ${
+                  active && opt.value !== "not_going" ? "opacity-70" : "text-[var(--muted)]"
+                }`}
+              >
                 {opt.hint}
               </span>
             </button>

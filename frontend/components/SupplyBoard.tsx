@@ -24,8 +24,8 @@ export function SupplyBoard({
   const [openExtra, setOpenExtra] = useState(false);
   const [openNeeded, setOpenNeeded] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [neededOpen, setNeededOpen] = useState(true);
-  const [extrasOpen, setExtrasOpen] = useState(true);
+  const [neededOpen, setNeededOpen] = useState(() => items.some((item) => !item.is_open));
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [foldedWho, setFoldedWho] = useState<Record<string, boolean>>({});
 
   const needed = useMemo(() => items.filter((item) => !item.is_open), [items]);
@@ -110,18 +110,25 @@ export function SupplyBoard({
                       ) : null}
                     </div>
                     {item.claims.length > 0 ? (
-                      <ul className="mt-2 flex flex-wrap gap-2">
-                        {item.claims.map((claim) => (
-                          <li
-                            key={claim.guest_id}
-                            className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-2 py-0.5 text-xs"
-                          >
-                            <PixelAvatar seed={claim.guest_name} size={16} />
-                            {claim.guest_name}
-                            {meId === claim.guest_id ? <span className="text-[var(--muted)]">· tú</span> : null}
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {item.claims.map((claim) => (
+                            <li
+                              key={claim.guest_id}
+                              className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-2 py-0.5 text-xs"
+                            >
+                              <PixelAvatar seed={claim.guest_name} size={16} />
+                              {claim.guest_name}
+                              {meId === claim.guest_id ? <span className="text-[var(--muted)]">· tú</span> : null}
+                            </li>
+                          ))}
+                        </ul>
+                        {item.claims.length > 1 ? (
+                          <p className="mt-2 text-xs text-[var(--muted)]">
+                            Van {item.claims.length}. Si es una sola cosa, avísense; si cada uno lleva, ya está.
+                          </p>
+                        ) : null}
+                      </>
                     ) : (
                       <p className="mt-2 text-xs text-[var(--muted)]">Todavía nadie lo toma.</p>
                     )}

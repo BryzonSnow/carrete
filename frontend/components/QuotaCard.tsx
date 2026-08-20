@@ -20,8 +20,6 @@ export function QuotaCard({
 
   const confirmed = me?.rsvp === "going" || me?.rsvp === "late";
   const markedCount = event.fee_amount > 0 ? Math.round(stats.fee_marked / event.fee_amount) : 0;
-  const goal = stats.payers || 0;
-  const pct = goal > 0 ? Math.min(100, Math.round((markedCount / goal) * 100)) : 0;
   const text = event.bank
     ? transferText(event.bank, event.fee_amount, `${event.name}${me ? ` — ${me.display_name}` : ""}`)
     : "";
@@ -92,16 +90,11 @@ export function QuotaCard({
       )}
 
       {stats.payers > 0 ? (
-        <div className="mt-3">
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#2a2420]">
-            <div className="h-full rounded-full bg-[var(--ok)] transition-[width]" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="mt-2 text-xs text-[var(--muted)]">
-            {markedCount === 0
-              ? "Nadie ha marcado transferencia todavía."
-              : `${markedCount} de ${stats.payers} ya marcaron que transfirieron.`}
-          </p>
-        </div>
+        <p className="mt-3 text-xs text-[var(--muted)]">
+          {markedCount === 0
+            ? "Nadie ha marcado transferencia todavía."
+            : `${markedCount} de ${stats.payers} ya marcaron que transfirieron.`}
+        </p>
       ) : null}
     </section>
   );
