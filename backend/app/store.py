@@ -3,7 +3,7 @@ from __future__ import annotations
 from psycopg_pool import ConnectionPool
 
 from . import slug
-from .errors import Conflict, Forbidden, NotFound, ValidationErr
+from .errors import Forbidden, NotFound, ValidationErr
 from .models import (
     CreateEventInput,
     CreateEventResponse,
@@ -305,32 +305,19 @@ class Store:
             with conn.transaction():
                 self._claim(conn, item_id, guest_id, qty, allow_over)
 
-    def _claim(self, conn, item_id, guest_id, qty: int, allow_over: bool) -> None:
+    def _claim(self, conn, item_id, guest_id, qty: int, _allow_over: bool) -> None:
         item = conn.execute(
             "select event_id, required_qty, is_open from items where id = %s for update",
             (item_id,),
         ).fetchone()
         if not item:
             raise NotFound()
-        current_row = conn.execute(
-            "select qty from item_claims where item_id = %s and guest_id = %s",
-            (item_id, guest_id),
-        ).fetchone()
-        current = current_row["qty"] if current_row else 0
-        committed_row = conn.execute(
-            "select coalesce(sum(qty),0) as n from item_claims where item_id = %s",
-            (item_id,),
-        ).fetchone()
-        committed = committed_row["n"]
         if qty == 0:
             conn.execute(
                 "delete from item_claims where item_id = %s and guest_id = %s",
                 (item_id, guest_id),
             )
             return
-        others = committed - current
-        if not allow_over and not item["is_open"] and others + qty > item["required_qty"]:
-            raise Conflict("ya está cubierto")
         conn.execute(
             """
             insert into item_claims (item_id, guest_id, qty)

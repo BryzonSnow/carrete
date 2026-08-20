@@ -5,6 +5,7 @@ import { QuotaCard } from "@/components/QuotaCard";
 import { RsvpCard } from "@/components/RsvpCard";
 import { SupplyBoard } from "@/components/SupplyBoard";
 import { WhenWhereCard } from "@/components/WhenWhereCard";
+import { Chevron } from "@/components/Fold";
 import { PixelAvatar, PixelIcon } from "@/components/PixelArt";
 import { useEvent } from "@/lib/useEvent";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import { useState } from "react";
 
 export function EventView({ slug }: { slug: string }) {
   const { data, error, loading, setData } = useEvent(slug);
+  const [goingOpen, setGoingOpen] = useState(true);
 
   if (loading) {
     return <p className="pt-24 text-center text-[var(--muted)]">Cargando el carrete…</p>;
@@ -64,29 +66,46 @@ export function EventView({ slug }: { slug: string }) {
 
       <div className="mt-4 space-y-4">
         <section className="card p-4 sm:p-5">
-          <h3 className="font-display flex items-center gap-2 text-xl">
-            <PixelIcon kind="people" size={24} />
-            Quiénes van
-          </h3>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {going.length === 0 ? (
-              <li className="text-sm text-[var(--muted)]">Todavía nadie confirma.</li>
-            ) : (
-              going.map((g) => (
-                <li
-                  key={g.id}
-                  className={`flex items-center gap-2 rounded-full border px-2 py-1 pr-3 text-sm ${
-                    me?.id === g.id ? "border-[var(--ember)]/50 bg-[var(--ember)]/10" : "border-[var(--line)]"
-                  }`}
-                >
-                  <PixelAvatar seed={g.display_name} size={24} />
-                  {g.display_name}
-                  {me?.id === g.id ? <span className="text-[var(--muted)]">· tú</span> : null}
-                  {g.rsvp === "late" ? <span className="text-[var(--muted)]">· tarde</span> : null}
-                </li>
-              ))
-            )}
-          </ul>
+          <button
+            type="button"
+            className="flex w-full items-start justify-between gap-3 text-left"
+            onClick={() => setGoingOpen((v) => !v)}
+            aria-expanded={goingOpen}
+          >
+            <span>
+              <span className="font-display flex items-center gap-2 text-xl">
+                <PixelIcon kind="people" size={24} />
+                Quiénes van
+              </span>
+              {!goingOpen ? (
+                <span className="mt-1 block text-sm text-[var(--muted)]">
+                  {going.length === 0 ? "Todavía nadie confirma" : `${going.length} ${going.length === 1 ? "persona" : "personas"}`}
+                </span>
+              ) : null}
+            </span>
+            <Chevron open={goingOpen} />
+          </button>
+          {goingOpen ? (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {going.length === 0 ? (
+                <li className="text-sm text-[var(--muted)]">Todavía nadie confirma.</li>
+              ) : (
+                going.map((g) => (
+                  <li
+                    key={g.id}
+                    className={`flex items-center gap-2 rounded-full border px-2 py-1 pr-3 text-sm ${
+                      me?.id === g.id ? "border-[var(--ember)]/50 bg-[var(--ember)]/10" : "border-[var(--line)]"
+                    }`}
+                  >
+                    <PixelAvatar seed={g.display_name} size={24} />
+                    {g.display_name}
+                    {me?.id === g.id ? <span className="text-[var(--muted)]">· tú</span> : null}
+                    {g.rsvp === "late" ? <span className="text-[var(--muted)]">· tarde</span> : null}
+                  </li>
+                ))
+              )}
+            </ul>
+          ) : null}
         </section>
         <SupplyBoard
           slug={slug}

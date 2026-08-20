@@ -156,12 +156,7 @@ export function AdminPanel({
                 <li key={item.id} className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0">
                   <p className="flex min-w-0 items-center gap-3 font-medium">
                     <ItemPixelIcon name={item.name} size={24} />
-                    <span>
-                      {item.name}
-                      {item.unit && item.unit !== "un" ? (
-                        <span className="font-normal text-[var(--muted)]"> · {item.unit}</span>
-                      ) : null}
-                    </span>
+                    <span>{item.name}</span>
                   </p>
                   <span className="text-sm text-[var(--muted)]">{item.claims[0]?.guest_name || "—"}</span>
                 </li>

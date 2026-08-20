@@ -353,7 +353,7 @@ export function iconKindForItem(name: string): ItemIconKind {
   const n = name.toLowerCase();
   if (/carb[oó]n|parrilla|fuego|brasas|asado/.test(n)) return "fire";
   if (/hielo/.test(n)) return "ice";
-  if (/pisco|vino|cerveza|trago|bebida|ron|whisky|chela|terremoto|gin|combo/.test(n)) return "bottle";
+  if (/pisco|vino|cerveza|trago|bebida|ron|whisky|chela|terremoto|gin|combo|agua|botella/.test(n)) return "bottle";
   if (/ensalada|pan|carne|chori|completo|empanada|papas|comida|tomate|palta|queso/.test(n)) return "food";
   if (/parlante|m[uú]sica|spotify|radio/.test(n)) return "speaker";
   return "bag";

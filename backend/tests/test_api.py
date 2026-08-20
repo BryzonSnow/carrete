@@ -152,8 +152,10 @@ def test_needed_items_claim(client):
     carbon = next(i for i in claimed.json()["items"] if i["name"] == "Carbón")
     assert carbon["claims"][0]["guest_name"] == "Cami"
 
-    taken = client.put(f"/api/events/{slug}/items/{carbon['id']}/claim", headers=mati_h, json={"qty": 1})
-    assert taken.status_code == 409
+    also = client.put(f"/api/events/{slug}/items/{carbon['id']}/claim", headers=mati_h, json={"qty": 1})
+    assert also.status_code == 200
+    carbon = next(i for i in also.json()["items"] if i["name"] == "Carbón")
+    assert {c["guest_name"] for c in carbon["claims"]} == {"Cami", "Mati"}
 
     first = client.put(f"/api/events/{slug}/items/{hielo['id']}/claim", headers=cami_h, json={"qty": 1})
     second = client.put(f"/api/events/{slug}/items/{hielo['id']}/claim", headers=mati_h, json={"qty": 1})
