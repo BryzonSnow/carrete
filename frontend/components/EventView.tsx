@@ -5,6 +5,7 @@ import { QuotaCard } from "@/components/QuotaCard";
 import { RsvpCard } from "@/components/RsvpCard";
 import { SupplyBoard } from "@/components/SupplyBoard";
 import { WhenWhereCard } from "@/components/WhenWhereCard";
+import { HostModeBar } from "@/components/HostModeBar";
 import { Chevron } from "@/components/Fold";
 import { PixelAvatar, PixelIcon } from "@/components/PixelArt";
 import { useEvent } from "@/lib/useEvent";
@@ -36,10 +37,11 @@ export function EventView({ slug }: { slug: string }) {
   return (
     <>
       {!me ? <NameGate slug={slug} hostName={event.host_name} onJoined={setData} /> : null}
+      {is_admin ? <HostModeBar slug={slug} surface="event" /> : null}
 
       <header className="mb-6">
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--ember)]">
-          {event.host_name ? `Te invita ${event.host_name}` : "Carrete"}
+          {is_admin ? "Tu carrete" : event.host_name ? `Te invita ${event.host_name}` : "Carrete"}
         </p>
         <h1 className="font-display mt-2 text-4xl sm:text-5xl">{event.name}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -48,11 +50,6 @@ export function EventView({ slug }: { slug: string }) {
             {stats.not_going > 0 ? ` · ${stats.not_going} no pueden` : ""}
           </span>
           <ShareLink name={event.name} />
-          {is_admin ? (
-            <Link href={`/e/${slug}/admin`} className="btn-ghost px-3 py-1 text-sm">
-              Panel de control
-            </Link>
-          ) : null}
         </div>
       </header>
 

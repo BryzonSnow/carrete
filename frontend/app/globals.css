@@ -155,3 +155,22 @@ input[type="checkbox"] {
   background: var(--ember);
   color: #1a0c04;
 }
+
+.host-bar {
+  background: var(--gold);
+  color: #1a0c04;
+}
+
+.host-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  background: #1a0c04;
+  color: var(--gold);
+  font-weight: 650;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.9rem;
+  white-space: nowrap;
+}
