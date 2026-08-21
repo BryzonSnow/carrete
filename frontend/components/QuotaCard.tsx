@@ -15,9 +15,10 @@ export function QuotaCard({
   data: EventPayload;
   onUpdate: (payload: EventPayload) => void;
 }) {
-  const { event, stats, me } = data;
+  const { event, stats, me, is_admin } = data;
   if (event.fee_amount <= 0) return null;
 
+  const isHost = is_admin || Boolean(me?.is_host);
   const confirmed = me?.rsvp === "going" || me?.rsvp === "late";
   const markedCount = event.fee_amount > 0 ? Math.round(stats.fee_marked / event.fee_amount) : 0;
   const text = event.bank
@@ -31,13 +32,19 @@ export function QuotaCard({
           <PixelIcon kind="coin" size={28} />
           <div>
             <h3 className="font-display text-xl">Cuota</h3>
-            <p className="text-sm text-[var(--muted)]">Cada uno transfiere lo mismo.</p>
+            <p className="text-sm text-[var(--muted)]">
+              {isHost ? "La plata llega a tu cuenta. Tú no transfieres." : "Cada uno transfiere lo mismo."}
+            </p>
           </div>
         </div>
         <p className="font-display text-2xl leading-none">{clp(event.fee_amount)}</p>
       </div>
 
-      {!confirmed ? (
+      {isHost ? (
+        <p className="mt-4 rounded-xl bg-[#2a2420] px-3 py-3 text-sm text-[var(--muted)]">
+          Los invitados copian los datos y marcan cuando transfieren. Tú solo validas en el panel.
+        </p>
+      ) : !confirmed ? (
         <p className="mt-4 rounded-xl bg-[#2a2420] px-3 py-3 text-sm text-[var(--muted)]">
           Confirma que vai para ver los datos de transferencia.
         </p>
@@ -95,6 +102,8 @@ export function QuotaCard({
             ? "Nadie ha marcado transferencia todavía."
             : `${markedCount} de ${stats.payers} ya marcaron que transfirieron.`}
         </p>
+      ) : isHost ? (
+        <p className="mt-3 text-xs text-[var(--muted)]">Todavía no hay invitados que deban transferir.</p>
       ) : null}
     </section>
   );

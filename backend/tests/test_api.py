@@ -109,9 +109,46 @@ def test_host_joins_going(client):
     assert joined.status_code == 200, joined.text
     payload = joined.json()["payload"]
     assert payload["me"]["rsvp"] == "going"
+    assert payload["me"]["is_host"] is True
     assert payload["stats"]["going"] == 1
     assert payload["event"]["address_locked"] is False
     assert payload["event"]["address"] is None
+
+
+def test_host_is_not_a_payer(client):
+    starts = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=23, minute=0, second=0, microsecond=0)
+    created = client.post(
+        "/api/events",
+        json={
+            "name": "Asado",
+            "host_name": "Nico",
+            "starts_at": starts.isoformat(),
+            "fee_amount": 5000,
+            "bank_holder": "Nicolás Pérez",
+            "bank_rut": "12.345.678-9",
+            "bank_name": "BancoEstado",
+            "bank_account_type": "Cuenta Vista",
+            "bank_account_number": "12345678",
+        },
+    )
+    assert created.status_code == 201, created.text
+    slug = created.json()["slug"]
+
+    host = client.post(f"/api/events/{slug}/join", json={"display_name": "Nico", "rsvp": "going"})
+    assert host.status_code == 200, host.text
+    payload = host.json()["payload"]
+    assert payload["me"]["is_host"] is True
+    assert payload["stats"]["going"] == 1
+    assert payload["stats"]["payers"] == 0
+    assert payload["stats"]["fee_goal"] == 0
+
+    guest = client.post(f"/api/events/{slug}/join", json={"display_name": "Cami", "rsvp": "going"})
+    assert guest.status_code == 200, guest.text
+    payload = guest.json()["payload"]
+    assert payload["me"]["is_host"] is False
+    assert payload["stats"]["going"] == 2
+    assert payload["stats"]["payers"] == 1
+    assert payload["stats"]["fee_goal"] == 5000
 
 
 def test_needed_items_claim(client):

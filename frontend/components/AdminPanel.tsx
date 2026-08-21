@@ -60,11 +60,14 @@ export function AdminPanel({
           <>
             <Stat
               label="Validados"
-              value={guests.filter((g) => (g.rsvp === "going" || g.rsvp === "late") && g.validated_at).length}
+              value={guests.filter((g) => !g.is_host && (g.rsvp === "going" || g.rsvp === "late") && g.validated_at).length}
             />
             <Stat
               label="Por revisar"
-              value={guests.filter((g) => (g.rsvp === "going" || g.rsvp === "late") && g.marked_at && !g.validated_at).length}
+              value={
+                guests.filter((g) => !g.is_host && (g.rsvp === "going" || g.rsvp === "late") && g.marked_at && !g.validated_at)
+                  .length
+              }
             />
           </>
         ) : (
@@ -89,10 +92,15 @@ export function AdminPanel({
                   <PixelAvatar seed={g.display_name} size={32} />
                   <div>
                     <p className="font-medium">{g.display_name}</p>
-                    <p className="text-xs text-[var(--muted)]">{RSVP_LABEL[g.rsvp]}</p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {g.is_host ? "Anfitrión" : RSVP_LABEL[g.rsvp]}
+                      {g.is_host && g.rsvp !== "going" ? ` · ${RSVP_LABEL[g.rsvp]}` : ""}
+                    </p>
                   </div>
                 </div>
-                {event.fee_amount > 0 && (g.rsvp === "going" || g.rsvp === "late") ? (
+                {g.is_host ? (
+                  <span className="text-xs text-[var(--muted)]">No transfiere</span>
+                ) : event.fee_amount > 0 && (g.rsvp === "going" || g.rsvp === "late") ? (
                   <button
                     type="button"
                     onClick={() => void validatePayment(slug, g.id, !g.validated_at).then(onUpdate)}

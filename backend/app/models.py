@@ -58,6 +58,7 @@ class GuestOut(BaseModel):
     created_at: datetime
     marked_at: datetime | None = None
     validated_at: datetime | None = None
+    is_host: bool = False
 
 
 class ItemClaim(BaseModel):
@@ -163,6 +164,24 @@ def to_public(event: dict, is_admin: bool, me: GuestOut | None) -> PublicEvent:
     return pub
 
 
+def host_guest_id(event: dict, guests: list[GuestOut]) -> str | None:
+    host = (event.get("host_name") or "").strip().casefold()
+    if not host:
+        return None
+    for g in guests:
+        if g.display_name.strip().casefold() == host:
+            return g.id
+    return None
+
+
+def apply_host_flags(event: dict, guests: list[GuestOut], me: GuestOut | None) -> None:
+    hid = host_guest_id(event, guests)
+    for g in guests:
+        g.is_host = g.id == hid
+    if me is not None:
+        me.is_host = me.id == hid
+
+
 def compute_stats(event: dict, guests: list[GuestOut]) -> Stats:
     stats = Stats()
     fee = event.get("fee_amount") or 0
@@ -175,6 +194,8 @@ def compute_stats(event: dict, guests: list[GuestOut]) -> Stats:
             stats.not_going += 1
         else:
             stats.pending += 1
+        if g.is_host:
+            continue
         if g.rsvp in ("going", "late"):
             stats.payers += 1
             if g.marked_at:

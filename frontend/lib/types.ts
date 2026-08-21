@@ -16,6 +16,7 @@ export type Guest = {
   created_at: string;
   marked_at?: string | null;
   validated_at?: string | null;
+  is_host?: boolean;
 };
 
 export type ItemClaim = {

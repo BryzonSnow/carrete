@@ -13,6 +13,7 @@ from .models import (
     ItemClaim,
     ItemOut,
     compute_stats,
+    apply_host_flags,
     guest_from_row,
     to_public,
     _id,
@@ -378,6 +379,7 @@ class Store:
         items = self.items(event["id"])
         found = self.guest_by_token(event["id"], guest_token)
         me = found[0] if found else None
+        apply_host_flags(event, guests, me)
         stats = compute_stats(event, guests)
         if not is_admin:
             for g in guests:
